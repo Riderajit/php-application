@@ -1,7 +1,7 @@
 <?php
 
-define('DB_SERVER', 'php-database.cbkpu6bsl4ei.us-east-2.rds.amazonaws.com');
-define('DB_USERNAME', 'admin');
-define('DB_PASSWORD', 'saranyaSREEDHARAN');
+define('DB_SERVER', 'database-1.cplnmrmbfwyc.us-east-1.rds.amazonaws.com');
+define('DB_USERNAME', 'database-1');
+define('DB_PASSWORD', 'Ajith3010');
 define('DB_DATABASE', 'php');
 ?>
