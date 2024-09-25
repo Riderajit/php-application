@@ -6,29 +6,33 @@
 
 <?php
 
-  /* Connect to MySQL and select the database. */
-  $connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
+/* Connect to MySQL and select the database. */
+$connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 
-  if (mysqli_connect_errno()) echo "Failed to connect to MySQL: " . mysqli_connect_error();
+if (mysqli_connect_errno()) {
+    die("Failed to connect to MySQL: " . mysqli_connect_error());
+}
 
-  $database = mysqli_select_db($connection, DB_DATABASE);
+/* Ensure that the EMPLOYEES table exists. */
+VerifyEmployeesTable($connection);
 
-  /* Ensure that the EMPLOYEES table exists. */
-  VerifyEmployeesTable($connection, DB_DATABASE);
+/* Check if the form is submitted */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $employee_name = htmlentities($_POST['NAME']);
+    $employee_address = htmlentities($_POST['ADDRESS']);
 
-  /* Add predefined employee data directly */
-  AddEmployee($connection, 'ajith', 'kalamboli');
-  AddEmployee($connection, 'santosh', 'chennai');
-  AddEmployee($connection, 'vignesh', 'malad');
-  AddEmployee($connection, 'karthik', 'kalamboli');
+    if (strlen($employee_name) > 0 && strlen($employee_address) > 0) {
+        AddEmployee($connection, $employee_name, $employee_address);
+    } else {
+        echo "<p>Please provide both a name and an address.</p>";
+    }
+}
 
-  /* If input fields are populated, add a row to the EMPLOYEES table. */
-  $employee_name = htmlentities($_POST['NAME']);
-  $employee_address = htmlentities($_POST['ADDRESS']);
-
-  if (strlen($employee_name) || strlen($employee_address)) {
-    AddEmployee($connection, $employee_name, $employee_address);
-  }
+// Add predefined employee data directly
+AddEmployee($connection, 'ajith', 'kalamboli');
+AddEmployee($connection, 'santosh', 'chennai');
+AddEmployee($connection, 'vignesh', 'malad');
+AddEmployee($connection, 'karthik', 'kalamboli');
 ?>
 
 <!-- Input form -->
@@ -64,11 +68,11 @@
 $result = mysqli_query($connection, "SELECT * FROM EMPLOYEES");
 
 while ($query_data = mysqli_fetch_row($result)) {
-  echo "<tr>";
-  echo "<td>", $query_data[0], "</td>",
-       "<td>", $query_data[1], "</td>",
-       "<td>", $query_data[2], "</td>";
-  echo "</tr>";
+    echo "<tr>";
+    echo "<td>", $query_data[0], "</td>",
+         "<td>", $query_data[1], "</td>",
+         "<td>", $query_data[2], "</td>";
+    echo "</tr>";
 }
 ?>
 
@@ -76,8 +80,8 @@ while ($query_data = mysqli_fetch_row($result)) {
 
 <!-- Clean up -->
 <?php
-  mysqli_free_result($result);
-  mysqli_close($connection);
+mysqli_free_result($result);
+mysqli_close($connection);
 ?>
 
 </body>
@@ -87,44 +91,44 @@ while ($query_data = mysqli_fetch_row($result)) {
 
 /* Add an employee to the table */
 function AddEmployee($connection, $name, $address) {
-   $n = mysqli_real_escape_string($connection, $name);
-   $a = mysqli_real_escape_string($connection, $address);
+    $n = mysqli_real_escape_string($connection, $name);
+    $a = mysqli_real_escape_string($connection, $address);
 
-   $query = "INSERT INTO EMPLOYEES (NAME, ADDRESS) VALUES ('$n', '$a');";
+    $query = "INSERT INTO EMPLOYEES (NAME, ADDRESS) VALUES ('$n', '$a')";
 
-   if (!mysqli_query($connection, $query)) {
-       echo "<p>Error adding employee data: " . mysqli_error($connection) . "</p>";
-   } else {
-       echo "<p>Employee $n added successfully.</p>";
-   }
+    if (!mysqli_query($connection, $query)) {
+        echo "<p>Error adding employee data: " . mysqli_error($connection) . "</p>";
+    } else {
+        echo "<p>Employee $n added successfully.</p>";
+    }
 }
 
 /* Check whether the table exists and, if not, create it */
-function VerifyEmployeesTable($connection, $dbName) {
-  if (!TableExists("EMPLOYEES", $connection, $dbName)) {
-     $query = "CREATE TABLE EMPLOYEES (
-         ID int(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-         NAME VARCHAR(45),
-         ADDRESS VARCHAR(90)
-       )";
+function VerifyEmployeesTable($connection) {
+    if (!TableExists("EMPLOYEES", $connection)) {
+        $query = "CREATE TABLE EMPLOYEES (
+            ID int(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            NAME VARCHAR(45),
+            ADDRESS VARCHAR(90)
+        )";
 
-     if (!mysqli_query($connection, $query)) {
-         echo "<p>Error creating table.</p>";
-     }
-  }
+        if (!mysqli_query($connection, $query)) {
+            echo "<p>Error creating table: " . mysqli_error($connection) . "</p>";
+        }
+    }
 }
 
 /* Check for the existence of a table */
-function TableExists($tableName, $connection, $dbName) {
-  $t = mysqli_real_escape_string($connection, $tableName);
-  $d = mysqli_real_escape_string($connection, $dbName);
+function TableExists($tableName, $connection) {
+    $t = mysqli_real_escape_string($connection, $tableName);
+    $checktable = mysqli_query($connection,
+        "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME = '$t' AND TABLE_SCHEMA = '" . DB_DATABASE . "'");
 
-  $checktable = mysqli_query($connection,
-      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME = '$t' AND TABLE_SCHEMA = '$d'");
-
-  if (mysqli_num_rows($checktable) > 0) return true;
-
-  return false;
+    return mysqli_num_rows($checktable) > 0;
 }
 ?>
+
+ 
+ 
+
 
